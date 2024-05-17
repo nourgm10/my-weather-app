@@ -113,22 +113,25 @@ function App() {
         <a
           href="https://github.com/nourgm10"
           target="_blank"
+          rel="noreferrer"
           class="footer-links"
         >
           Nour Ghallale
         </a>
         <span class="footer-text">, is open-sourced on </span>
         <a
-          href="https://github.com/nourgm10/nour-weather-app"
+          href="https://github.com/nourgm10/nours-react-weather"
           target="_blank"
+          rel="noreferrer"
           class="footer-links"
         >
           GitHub
         </a>
         <span class="footer-text"> and hosted on </span>
         <a
-          href="https://nours-weather-app.netlify.app/"
+          href="https://nours-react-weather.netlify.app/"
           target="_blank"
+          rel="noreferrer"
           class="footer-links"
         >
           Netlify
