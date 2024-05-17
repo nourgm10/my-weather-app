@@ -1,27 +1,141 @@
-import "./App.css";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Search from "./Search";
+import "./App.css";
 
-function updateWeather(response) {
-  let temperatureElement = document.querySelector("#current-degrees");
-  let temperature = response.data.temperature.current;
-  let cityElement = document.querySelector("#city");
-  let descriptionElement = document.querySelector("#weather-description");
-  let humidityElement = document.querySelector("#humidity");
-  let windElement = document.querySelector("#wind");
-  let timeElement = document.querySelector("#time");
-  let date = new Date();
-  let iconElement = document.querySelector("#icon");
+function App() {
+  const [weatherData, setWeatherData] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [city, setCity] = useState("Paris");
 
-  cityElement.innerHTML = response.data.city.toUpperCase();
-  descriptionElement.innerHTML = response.data.condition.description;
-  temperatureElement.innerHTML = Math.round(temperature);
-  humidityElement.innerHTML = `${response.data.temperature.humidity}%`;
-  windElement.innerHTML = `${response.data.wind.speed}km/h`;
-  timeElement.innerHTML = formatDate(date);
-  iconElement.innerHTML = `<img src="${response.data.condition.icon_url}" class="current-icon" />`;
+  useEffect(() => {
+    const searchCity = async (city) => {
+      let apiKey = "2dbe7af4434o3f6bf61f8t7c0caf3496";
+      let apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
+      const response = await axios.get(apiUrl);
+      setWeatherData(response.data);
+      getForecast(city);
+    };
+    searchCity(city);
+  }, [city]);
 
-  getForecast(response.data.city);
+  function getForecast(city) {
+    let apiKey = "2dbe7af4434o3f6bf61f8t7c0caf3496";
+    let apiUrl = `https://api.shecodes.io/weather/v1/forecast?query=${city}&key=${apiKey}&units=metric`;
+    axios.get(apiUrl).then((response) => {
+      setForecastData(response.data);
+    });
+  }
+
+  function handleSearchSubmit(event) {
+    event.preventDefault();
+    setCity(searchInput);
+    setSearchInput("");
+  }
+
+  return (
+    <div className="App">
+      <header>
+        <form className="search-form" onSubmit={handleSearchSubmit}>
+          <input
+            type="text"
+            placeholder="Enter city name"
+            class="search-input"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          <button type="submit" class="search-button">
+            Search
+          </button>
+        </form>
+      </header>
+      {weatherData && (
+        <div className="weather-app">
+          <div className="weather-data">
+            <div>
+              <h1>{weatherData.city.toUpperCase()}</h1>
+              <p>
+                <span className="current-conditions">
+                  {formatDate(new Date())}, {weatherData.condition.description}
+                </span>
+                <br />
+                <span className="current-conditions">
+                  Humidity: {weatherData.temperature.humidity}%, Wind:{" "}
+                  {weatherData.wind.speed} km/h
+                </span>
+              </p>
+            </div>
+            <div className="current-temperature">
+              <div id="icon">
+                <img
+                  src={weatherData.condition.icon_url}
+                  alt={weatherData.condition.description}
+                />
+              </div>
+              <div className="current-degrees">
+                {Math.round(weatherData.temperature.current)}
+              </div>
+              <div className="current-degrees-unit">°C</div>
+            </div>
+          </div>
+          {forecastData && (
+            <div className="weather-forecast">
+              {forecastData.daily.slice(1, 6).map((day, index) => (
+                <div key={index} className="day-1">
+                  <div className="forecast-day">{formatDay(day.time)}</div>
+                  <img
+                    src={day.condition.icon_url}
+                    alt={day.condition.description}
+                    className="forecast-icon"
+                  />
+                  <div className="forecast-temperature">
+                    <div>
+                      <span className="min-max-forecast">Min: </span>
+                      <span id="min-forecast-temperature">
+                        {Math.round(day.temperature.minimum)}°C
+                      </span>
+                    </div>
+                    <div>
+                      <span className="min-max-forecast">Max: </span>
+                      <span id="max-forecast-temperature">
+                        {Math.round(day.temperature.maximum)}°C
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      <footer>
+        <span class="footer-text">This project was coded by </span>
+        <a
+          href="https://github.com/nourgm10"
+          target="_blank"
+          class="footer-links"
+        >
+          Nour Ghallale
+        </a>
+        <span class="footer-text">, is open-sourced on </span>
+        <a
+          href="https://github.com/nourgm10/nour-weather-app"
+          target="_blank"
+          class="footer-links"
+        >
+          GitHub
+        </a>
+        <span class="footer-text"> and hosted on </span>
+        <a
+          href="https://nours-weather-app.netlify.app/"
+          target="_blank"
+          class="footer-links"
+        >
+          Netlify
+        </a>
+      </footer>
+    </div>
+  );
 }
 
 function formatDate(date) {
@@ -45,135 +159,11 @@ function formatDate(date) {
   return `${day}, ${hours}:${minutes}`;
 }
 
-function searchCity(city) {
-  let apiKey = "2dbe7af4434o3f6bf61f8t7c0caf3496";
-  let apiUrl = `https://api.shecodes.io/weather/v1/current?query=${city}&key=${apiKey}&units=metric`;
-  axios.get(apiUrl).then(updateWeather);
-}
-
-function handleSearchSubmit(event) {
-  event.preventDefault();
-  let searchInput = document.querySelector("#search-input");
-
-  searchCity(searchInput.value);
-}
-
 function formatDay(timestamp) {
   let date = new Date(timestamp * 1000);
   let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return days[date.getDay()];
-}
-
-function getForecast(city) {
-  let apiKey = "2dbe7af4434o3f6bf61f8t7c0caf3496";
-  let apiUrl = `https://api.shecodes.io/weather/v1/forecast?query=${city}&key=${apiKey}&units=metric`;
-  axios(apiUrl).then(displayForecast);
-}
-
-function displayForecast(response) {
-  let forecastHtml = "";
-
-  response.data.daily.forEach(function (day, index) {
-    if ((index > 0) & (index < 6)) {
-      forecastHtml =
-        forecastHtml +
-        `
-<div class="day-1">
-          <div class="forecast-day">${formatDay(day.time)}</div>
-          <img
-            src="${day.condition.icon_url}"
-            alt=""
-            class="forecast-icon"
-          />
-          <div class="forecast-temperature">
-            <div>
-              <span class="min-max-forecast">min </span
-              ><span id="min-forecast-temperature">${Math.round(
-                day.temperature.minimum
-              )}°C</span>
-            </div>
-            <div>
-              <span class="min-max-forecast">max </span
-              ><span id="max-forecast-temperature">${Math.round(
-                day.temperature.maximum
-              )}°C</span>
-            </div>
-          </div>
-        </div>`;
-    }
-  });
-
-  let forecastElement = document.querySelector("#forecast");
-  forecastElement.innerHTML = forecastHtml;
-}
-
-let searchFormElement = document.querySelector("#search-form");
-searchFormElement.addEventListener("submit", handleSearchSubmit);
-
-searchCity("Paris");
-
-function App() {
-  return (
-    <div className="App">
-      <body>
-        <header>
-          <Search />
-        </header>
-        <div class="weather-app">
-          <div class="weather-data">
-            <div>
-              <h1 id="city"></h1>
-              <p>
-                <span class="current-conditions">
-                  <span id="time"></span>,{" "}
-                  <span id="weather-description"></span>
-                </span>
-                <br />
-                <span class="current-conditions">Humidity: </span>
-                <span id="humidity"></span>
-                <span class="current-conditions">, Wind: </span>
-                <span id="wind"></span>
-              </p>
-            </div>
-            <div class="current-temperature">
-              <div id="icon"></div>
-              <div class="current-degrees" id="current-degrees"></div>
-              <div class="current-degrees-unit">°C</div>
-            </div>
-          </div>
-          <div class="weather-forecast" id="forecast"></div>
-        </div>
-        <footer>
-          <span class="footer-text">This project was coded by</span>
-          <a
-            href="https://github.com/nourgm10"
-            target="_blank"
-            class="footer-links"
-          >
-            Nour Ghallale
-          </a>
-          <span class="footer-text">, is open-sourced on</span>
-          <a
-            href="https://github.com/nourgm10/nour-weather-app"
-            target="_blank"
-            class="footer-links"
-          >
-            GitHub
-          </a>
-          <span class="footer-text">and hosted on</span>
-          <a
-            href="https://nours-weather-app.netlify.app/"
-            target="_blank"
-            class="footer-links"
-          >
-            Netlify
-          </a>
-        </footer>
-        <script src="src/index.js"></script>
-      </body>
-    </div>
-  );
 }
 
 export default App;
